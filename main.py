@@ -231,6 +231,42 @@ source_path = 'new_data/html/prime pages/'
 dest_path = 'new_data/html/players/'
 profile_path = 'new_data/html/profiles/'
 stats_path = 'new_data/html/stats/'
+chart_path = 'new_data/html/charts/'
+
+
+def store_chart_info(year, player_source_path, dest_path):
+    ''' create a chart-info table for the players in year X.'''
+    player_source_path = player_source_path + str(year)+'/'
+    dest_path = dest_path + str(year)+'/'
+    for fn in os.listdir(player_source_path):
+        name = fn[7:fn.rfind('_')]
+        id = fn[fn.rfind('_')+1:-5]
+        compl_name = 'chart_mv_' + name + '_' + id + '.html'
+        if compl_name in os.listdir(dest_path):
+            print(f'{id} exists already')
+            # continue
+        else:
+            name = fn[7:fn.rfind('_')]
+            id = fn[fn.rfind('_')+1:-5]
+            page = 'https://www.transfermarkt.co.uk/' + \
+                name + '/marktwertverlauf/spieler/' + id
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.13; rv:63.0) Gecko/20100101 Firefox/63.0'}
+            market_value = requests.get(page, headers=headers)
+            time.sleep(0.2)
+            soup_mv = BeautifulSoup(market_value.content, 'html.parser')
+            print(name)
+            with open(dest_path + '/chart_mv_' + name + '_' + id + '.html', 'w', encoding='utf-8') as f:
+                f.write(str(soup_mv))
+    print(f'############ {year} charts stored succesfully! #############')
+
+
+def store_all_charts(begin_year, end_year, dest_path, chart_path):
+    """Stores all stats from begin_year to end year in the stats_path"""
+    for year in range(begin_year, end_year+1):
+        store_chart_info(year, dest_path, chart_path)
+    return print(" all charts stored in their years")
+
 
 page = 'https://www.transfermarkt.de/1-bundesliga/tabelle/wettbewerb/L1?saison_id='
 headers = {
@@ -250,3 +286,6 @@ store_profile_all_years(2010, 2020, dest_path, profile_path)
 
 # stores all the stats from begin year to end year of players in a csv file in the given path
 store_all_stats(2010, 2020, dest_path, stats_path)
+
+# stores all the chart info from begin year to end year of players from dest_path to the chart_path
+store_all_charts(2010, 2020, dest_path, chart_path)
